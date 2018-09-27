@@ -33,6 +33,7 @@ DEFAULT_PREDICTION_CACHE_SIZE_BYTES = 33554432
 CLIPPER_TEMP_DIR = "/tmp/clipper"  # Used Internally for Test; Not Windows Compatible
 
 logging.basicConfig(
+    stream=sys.stdout,
     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
     datefmt='%y-%m-%d:%H:%M:%S',
     level=logging.INFO)
