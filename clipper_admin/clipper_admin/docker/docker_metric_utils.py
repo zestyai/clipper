@@ -35,12 +35,13 @@ def run_query_frontend_metric_image(name, docker_client, query_name,
         query_name, CLIPPER_INTERNAL_QUERY_PORT)
     query_frontend_metric_labels = common_labels.copy()
 
-    docker_client.containers.run(
+    container = docker_client.containers.run(
         frontend_exporter_image,
         query_frontend_metric_cmd,
         name=name,
         labels=query_frontend_metric_labels,
         **extra_container_kwargs)
+    return container
 
 
 def setup_metric_config(query_frontend_metric_name, prom_config_path,

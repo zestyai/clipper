@@ -104,11 +104,17 @@ class DockerContainerManager(ContainerManager):
             "detach": True,
         }
 
+  }
         self.extra_container_kwargs.update(container_args)
 
         self.logger = ClusterAdapter(logger, {
             'cluster_name': self.cluster_identifier
         })
+
+        # log three docker names
+        self.query_frontend_name = None
+        self.mgmt_frontend_name = None
+        self.prometheus_name = None
 
     def start_clipper(self,
                       query_frontend_image,
@@ -173,7 +179,7 @@ class DockerContainerManager(ContainerManager):
         mgmt_labels[CLIPPER_MGMT_FRONTEND_CONTAINER_LABEL] = ""
         mgmt_labels[CLIPPER_DOCKER_PORT_LABELS['management']] = str(
             self.clipper_management_port)
-        self.docker_client.containers.run(
+        mgmt_container = self.docker_client.containers.run(
             mgmt_frontend_image,
             mgmt_cmd,
             name="mgmt_frontend-{}".format(random.randint(
@@ -184,6 +190,7 @@ class DockerContainerManager(ContainerManager):
             },
             labels=mgmt_labels,
             **self.extra_container_kwargs)
+        self.mgmt_frontend_name = mgmt_container.name
 
         query_cmd = ("--redis_ip={redis_ip} --redis_port={redis_port} "
                      "--prediction_cache_size={cache_size}").format(
@@ -201,7 +208,7 @@ class DockerContainerManager(ContainerManager):
             self.clipper_query_port)
         query_labels[CLIPPER_DOCKER_PORT_LABELS['query_rpc']] = str(
             self.clipper_rpc_port)
-        self.docker_client.containers.run(
+        query_container = self.docker_client.containers.run(
             query_frontend_image,
             query_cmd,
             name=query_name,
@@ -212,6 +219,7 @@ class DockerContainerManager(ContainerManager):
             },
             labels=query_labels,
             **self.extra_container_kwargs)
+        self.query_frontend_name = query_container.name
 
         # Metric Section
         query_frontend_metric_name = "query_frontend_exporter-{}".format(
@@ -235,9 +243,10 @@ class DockerContainerManager(ContainerManager):
         metric_labels[CLIPPER_DOCKER_PORT_LABELS['metric']] = str(
             self.prometheus_port)
         metric_labels[CLIPPER_METRIC_CONFIG_LABEL] = self.prom_config_path
-        run_metric_image(self.docker_client, metric_labels,
+        metric_container = run_metric_image(self.docker_client, metric_labels,
                          self.prometheus_port, self.prom_config_path,
                          self.extra_container_kwargs)
+        self.prometheus_name = metric_container.name
 
         self.connect()
 
@@ -247,6 +256,8 @@ class DockerContainerManager(ContainerManager):
         start_clipper the ports might be changed.
         :return: None
         """
+        raise Exception("Please do not use connect in this version of Clipper")
+
         containers = self.docker_client.containers.list(
             filters={
                 'label': [
@@ -446,15 +457,15 @@ class DockerContainerManager(ContainerManager):
 
     def get_admin_addr(self):
         return "{host}:{port}".format(
-            host=self.public_hostname, port=self.clipper_management_port)
+            host=self.mgmt_frontend_name, port=self.clipper_management_port)
 
     def get_query_addr(self):
         return "{host}:{port}".format(
-            host=self.public_hostname, port=self.clipper_query_port)
+            host=self.query_frontend_name, port=self.clipper_query_port)
 
     def get_metric_addr(self):
         return "{host}:{port}".format(
-            host=self.public_hostname, port=self.prometheus_port)
+            host=self.prometheus_name, port=self.prometheus_port)
 
 
 def find_unbound_port(start=None,
