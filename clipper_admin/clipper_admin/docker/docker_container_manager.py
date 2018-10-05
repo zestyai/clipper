@@ -104,7 +104,6 @@ class DockerContainerManager(ContainerManager):
             "detach": True,
         }
 
-  }
         self.extra_container_kwargs.update(container_args)
 
         self.logger = ClusterAdapter(logger, {
@@ -115,7 +114,7 @@ class DockerContainerManager(ContainerManager):
         self.query_frontend_name = None
         self.mgmt_frontend_name = None
         self.prometheus_name = None
-
+    }
     def start_clipper(self,
                       query_frontend_image,
                       mgmt_frontend_image,
