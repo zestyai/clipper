@@ -110,7 +110,7 @@ def run_metric_image(docker_client, common_labels, prometheus_port,
 
 
 def add_to_metric_config(model_container_name, prom_config_path,
-                         prometheus_port, CLIPPER_INTERNAL_METRIC_PORT):
+                         prometheus_name, prometheus_port, CLIPPER_INTERNAL_METRIC_PORT):
     """
     Add a new model container to the prometheus.yml configuration file.
     :param model_container_name: New model container name, need to be unique.
@@ -147,8 +147,8 @@ def add_to_metric_config(model_container_name, prom_config_path,
     with open(prom_config_path, 'w') as f:
         yaml.dump(conf, f)
 
-    requests.post('http://localhost:{prometheus_port}/-/reload'.format(
-        prometheus_port=prometheus_port))
+    requests.post('http://{prometheus_name}:{prometheus_port}/-/reload'.format(
+        prometheus_name=prometheus_name, prometheus_port=prometheus_port))
 
 
 def delete_from_metric_config(model_container_name, prom_config_path,

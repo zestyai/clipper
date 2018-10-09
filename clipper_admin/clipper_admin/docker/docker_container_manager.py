@@ -343,7 +343,7 @@ class DockerContainerManager(ContainerManager):
 
         # Metric Section
         add_to_metric_config(model_container_name, self.prom_config_path,
-                             self.prometheus_port,
+                             self.prometheus_name, self.prometheus_port,
                              CLIPPER_INTERNAL_METRIC_PORT)
 
         # Return model_container_name so we can check if it's up and running later
