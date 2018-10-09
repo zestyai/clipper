@@ -386,6 +386,7 @@ class DockerContainerManager(ContainerManager):
                 cur_container.stop()
                 # Metric Section
                 delete_from_metric_config(cur_container.name,
+                                          self.prometheus_name,
                                           self.prom_config_path,
                                           self.prometheus_port)
 

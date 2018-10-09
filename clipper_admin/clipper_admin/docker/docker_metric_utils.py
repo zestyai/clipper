@@ -152,7 +152,7 @@ def add_to_metric_config(model_container_name, prom_config_path,
 
 
 def delete_from_metric_config(model_container_name, prom_config_path,
-                              prometheus_port):
+                              prometheus_name, prometheus_port):
     """
     Delete the stored model container from the prometheus.yml configuration file.
     :param model_container_name: the model container name to be deleted.
@@ -170,4 +170,4 @@ def delete_from_metric_config(model_container_name, prom_config_path,
         yaml.dump(conf, f)
 
     requests.post('http://localhost:{prometheus_port}/-/reload'.format(
-        prometheus_port=prometheus_port))
+        prometheus_name=prometheus_name, prometheus_port=prometheus_port))
