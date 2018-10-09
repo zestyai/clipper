@@ -1264,7 +1264,7 @@ class ClipperConnection(object):
         self.cm.stop_all_model_containers()
         self.logger.info("Stopped all Clipper model containers")
 
-    def stop_all(self, graceful=True):
+    def stop_all(self, graceful=False):
         """Stops all processes that were started via Clipper admin commands.
 
         This includes the query and management frontend Docker containers and all model containers.

@@ -441,7 +441,7 @@ class DockerContainerManager(ContainerManager):
         for c in containers:
             c.stop()
 
-    def stop_all(self, graceful=True):
+    def stop_all(self, graceful=False):
         containers = self.docker_client.containers.list(
             filters={
                 "label":
