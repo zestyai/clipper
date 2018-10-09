@@ -92,7 +92,7 @@ def run_metric_image(docker_client, common_labels, prometheus_port,
         "--web.enable-lifecycle"
     ]
     metric_labels = common_labels.copy()
-    docker_client.containers.run(
+    container = docker_client.containers.run(
         "prom/prometheus:{}".format(PROM_VERSION),
         metric_cmd,
         name="metric_frontend-{}".format(random.randint(0, 100000)),
@@ -106,6 +106,7 @@ def run_metric_image(docker_client, common_labels, prometheus_port,
         user='root',  # prom use nobody by default but it can't access config.
         labels=metric_labels,
         **extra_container_kwargs)
+    return container
 
 
 def add_to_metric_config(model_container_name, prom_config_path,
