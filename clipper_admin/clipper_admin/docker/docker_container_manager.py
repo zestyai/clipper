@@ -256,8 +256,6 @@ class DockerContainerManager(ContainerManager):
         start_clipper the ports might be changed.
         :return: None
         """
-        raise Exception("Please do not use connect in this version of Clipper")
-
         containers = self.docker_client.containers.list(
             filters={
                 'label': [
