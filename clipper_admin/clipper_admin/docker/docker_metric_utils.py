@@ -96,7 +96,7 @@ def run_metric_image(docker_client, common_labels, prometheus_port,
         "prom/prometheus:{}".format(PROM_VERSION),
         metric_cmd,
         name="metric_frontend-{}".format(random.randint(0, 100000)),
-        ports={'9090/tcp': prometheus_port},
+        #ports={'9090/tcp': prometheus_port},
         volumes={
             prom_config_path: {
                 'bind': '/etc/prometheus/prometheus.yml',

@@ -164,9 +164,9 @@ class DockerContainerManager(ContainerManager):
                 "redis-server --port %s" % CLIPPER_INTERNAL_REDIS_PORT,
                 name="redis-{}".format(random.randint(
                     0, 100000)),  # generate a random name
-                ports={
-                    '%s/tcp' % CLIPPER_INTERNAL_REDIS_PORT: self.redis_port
-                },
+                #ports={
+                #    '%s/tcp' % CLIPPER_INTERNAL_REDIS_PORT: self.redis_port
+                #},
                 labels=redis_labels,
                 **self.extra_container_kwargs)
             self.redis_ip = redis_container.name
@@ -184,10 +184,10 @@ class DockerContainerManager(ContainerManager):
             mgmt_cmd,
             name="mgmt_frontend-{}".format(random.randint(
                 0, 100000)),  # generate a random name
-            ports={
-                '%s/tcp' % CLIPPER_INTERNAL_MANAGEMENT_PORT:
-                self.clipper_management_port
-            },
+            #ports={
+            #    '%s/tcp' % CLIPPER_INTERNAL_MANAGEMENT_PORT:
+            #    self.clipper_management_port
+            #},
             labels=mgmt_labels,
             **self.extra_container_kwargs)
         self.mgmt_frontend_name = mgmt_container.name
@@ -212,11 +212,11 @@ class DockerContainerManager(ContainerManager):
             query_frontend_image,
             query_cmd,
             name=query_name,
-            ports={
-                '%s/tcp' % CLIPPER_INTERNAL_QUERY_PORT:
-                self.clipper_query_port,
-                '%s/tcp' % CLIPPER_INTERNAL_RPC_PORT: self.clipper_rpc_port
-            },
+            #ports={
+            #    '%s/tcp' % CLIPPER_INTERNAL_QUERY_PORT:
+            #    self.clipper_query_port,
+            #    '%s/tcp' % CLIPPER_INTERNAL_RPC_PORT: self.clipper_rpc_port
+            #},
             labels=query_labels,
             **self.extra_container_kwargs)
         self.query_frontend_name = query_container.name
@@ -244,8 +244,8 @@ class DockerContainerManager(ContainerManager):
             self.prometheus_port)
         metric_labels[CLIPPER_METRIC_CONFIG_LABEL] = self.prom_config_path
         metric_container = run_metric_image(self.docker_client, metric_labels,
-                         self.prometheus_port, self.prom_config_path,
-                         self.extra_container_kwargs)
+                           self.prometheus_port, self.prom_config_path,
+                           self.extra_container_kwargs)
         self.prometheus_name = metric_container.name
 
         self.connect()
