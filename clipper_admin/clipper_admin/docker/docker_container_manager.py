@@ -383,7 +383,7 @@ class DockerContainerManager(ContainerManager):
                     extra=(num_extra)))
             while len(current_replicas) > num_replicas:
                 cur_container = current_replicas.pop()
-                cur_container.stop()
+                cur_container.kill()
                 # Metric Section
                 delete_from_metric_config(cur_container.name,
                                           self.prom_config_path,
