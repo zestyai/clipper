@@ -169,5 +169,5 @@ def delete_from_metric_config(model_container_name, prom_config_path,
     with open(prom_config_path, 'w') as f:
         yaml.dump(conf, f)
 
-    requests.post('http://localhost:{prometheus_port}/-/reload'.format(
+    requests.post('http://{prometheus_name}:{prometheus_port}/-/reload'.format(
         prometheus_name=prometheus_name, prometheus_port=prometheus_port))
