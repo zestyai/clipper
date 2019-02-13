@@ -1,3 +1,5 @@
+Zestyai fork of clipper to provide kubernetes gpu support for pytorch models. This will go away once the main lib supports these changes
+
 # Clipper
 
 [![Build Status](https://amplab.cs.berkeley.edu/jenkins/buildStatus/icon?job=Clipper)](https://amplab.cs.berkeley.edu/jenkins/job/Clipper/) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
