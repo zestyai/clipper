@@ -42,9 +42,12 @@ CONFIG_FILES = {
         'config': 'prom_configmap.yaml'
     },
     'model': {
-        'deployment': 'model-container-template.yaml'
+        'deployment': 'model-container-template.yaml',
+        'deployment-gpu': 'model-container-template-gpu.yaml'
     }
 }
+
+
 
 
 @contextmanager
@@ -368,13 +371,18 @@ class KubernetesContainerManager(ContainerManager):
                 "Could not connect to Clipper Kubernetes cluster. "
                 "Reason: {}".format(e))
 
-    def deploy_model(self, name, version, input_type, image, num_replicas=1):
+    def deploy_model(self, name, version, input_type, image, num_replicas=1, gpu=False):
         for query_frontend_id in range(self.num_frontend_replicas):
             deployment_name = get_model_deployment_name(
                 name, version, query_frontend_id, self.cluster_name)
 
+            config_file = CONFIG_FILES['model']['deployment']
+
+            if gpu:
+                config_file = CONFIG_FILES['model']['deployment-gpu']
+
             generated_body = self._generate_config(
-                CONFIG_FILES['model']['deployment'],
+                config_file,
                 deployment_name=deployment_name,
                 num_replicas=num_replicas,
                 container_label=create_model_container_label(name, version),
