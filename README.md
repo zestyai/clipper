@@ -35,7 +35,8 @@ __Install Clipper__
 
 You can either install Clipper directly from GitHub:
 ```sh
-pip install git+https://github.com/ucbrise/clipper.git@develop#subdirectory=clipper_admin
+
+pip install git+https://github.com/zestyai/clipper.git@develop#subdirectory=clipper_admin
 ```
 or by cloning Clipper and installing directly from the file system:
 ```sh
