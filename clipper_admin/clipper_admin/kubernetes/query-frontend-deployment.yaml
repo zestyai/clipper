@@ -1,6 +1,6 @@
 # Deployment config for query-frontend
 # null values are set to be filled in later.
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -30,9 +30,21 @@ spec:
         ports:
         - containerPort: 7000
         - containerPort: 1337
+        livenessProbe:
+          httpGet:
+            port: 1337
+            path: "/metrics"
+          initialDelaySeconds: 5
+          timeoutSeconds: 30
+        readinessProbe:
+          httpGet:
+            port: 1337
+            path: "/metrics"
+          initialDelaySeconds: 5
+          timeoutSeconds: 30
       - args:
-        - "--query_frontend_name" 
-        - "query-frontend:1337"
+          - "--query_frontend_name"
+          - "localhost:1337"
         image: {{ exporter_image }}
         name: frontend-exporter
         ports:

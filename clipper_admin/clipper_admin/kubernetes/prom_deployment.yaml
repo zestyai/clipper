@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -24,6 +24,19 @@ spec:
         name: metrics
         ports:
         - containerPort: 1390
+        - containerPort: 9090
+        livenessProbe:
+          httpGet:
+            port: 9090
+            path: "/metrics"
+          initialDelaySeconds: 5
+          timeoutSeconds: 30
+        readinessProbe:
+          httpGet:
+            port: 9090
+            path: "/admin/ping"
+          initialDelaySeconds: 5
+          timeoutSeconds: 30
         volumeMounts:
         - name: config-volume #This name needs to match the one under "volumes"
           mountPath: /etc/prometheus

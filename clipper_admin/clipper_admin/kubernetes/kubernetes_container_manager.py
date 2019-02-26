@@ -71,7 +71,8 @@ class KubernetesContainerManager(ContainerManager):
                  redis_port=6379,
                  useInternalIP=False,
                  namespace='default',
-                 create_namespace_if_not_exists=False):
+                 create_namespace_if_not_exists=False,
+                 kubernetes_context=None,):
         """
 
         Parameters
@@ -84,6 +85,8 @@ class KubernetesContainerManager(ContainerManager):
             an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.),
             and alphanumerics between. See more at:
             https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
+        kubernetes_context : str, optional
+            Kubernetes context to connect to. Leave as None to use current active context
         kubernetes_proxy_addr : str, optional
             The proxy address if you are proxying connections locally using ``kubectl proxy``.
             If this argument is provided, Clipper will construct the appropriate proxy
@@ -128,7 +131,7 @@ class KubernetesContainerManager(ContainerManager):
         self.redis_ip = redis_ip
         self.redis_port = redis_port
         self.useInternalIP = useInternalIP
-        config.load_kube_config()
+        config.load_kube_config(context=kubernetes_context)
         configuration.assert_hostname = False
         self._k8s_v1 = client.CoreV1Api()
         self._k8s_beta = client.ExtensionsV1beta1Api()

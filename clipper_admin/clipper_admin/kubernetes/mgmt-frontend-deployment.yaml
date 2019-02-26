@@ -22,4 +22,16 @@ spec:
         name: mgmt-frontend
         ports:
         - containerPort: 1338
+        livenessProbe:
+          httpGet:
+            port: 1338
+            path: "/admin/ping"
+          initialDelaySeconds: 5
+          timeoutSeconds: 30
+        readinessProbe:
+          httpGet:
+            port: 1338
+            path: "/admin/ping"
+          initialDelaySeconds: 5
+          timeoutSeconds: 30
       restartPolicy: Always
