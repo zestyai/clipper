@@ -297,14 +297,14 @@ class KubernetesContainerManager(ContainerManager):
         return parsed
 
     def connect(self):
-        nodes = self._k8s_v1.list_node()
+        nodes = self._k8s_v1.list_node().items()
         if len(nodes) == 0:
             msg = "No nodes found in the kubernetes cluster! Stopping."
             self.logger.error(msg)
             raise ClipperException(msg)
 
         external_node_hosts = []
-        for node in nodes.items:
+        for node in nodes:
             for addr in node.status.addresses:
                 if addr.type == "ExternalDNS":
                     external_node_hosts.append(addr.address)
@@ -312,7 +312,7 @@ class KubernetesContainerManager(ContainerManager):
         if len(external_node_hosts) == 0 and self.useInternalIP:
             msg = "No external node addresses found. Using Internal IP address"
             self.logger.warning(msg)
-            node = nodes.items()[0]
+            node = nodes[0]
             for addr in node.status.addresses:
                 if addr.type == "InternalIP":
                     external_node_hosts.append(addr.address)
