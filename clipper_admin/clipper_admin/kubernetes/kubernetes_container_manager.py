@@ -383,7 +383,8 @@ class KubernetesContainerManager(ContainerManager):
         for query_frontend_id in range(self.num_frontend_replicas):
             deployment_name = get_model_deployment_name(
                 name, version, query_frontend_id, self.cluster_name)
-            self.logger.info('Starting model deployment for model "{')
+            self.logger.info("Starting model deployment: {deployment_name}".format(
+                deployment_name=deployment_name))
 
             config_file = CONFIG_FILES['model']['deployment']
 
@@ -406,14 +407,14 @@ class KubernetesContainerManager(ContainerManager):
                 self._k8s_beta.create_namespaced_deployment(
                     body=generated_body, namespace=self.k8s_namespace)
 
-            self.logger.info('Model deployed. Waiting for healthy status from model container...')
+            self.logger.info("Model deployed. Waiting for healthy status from model container...")
 
             while self._k8s_beta.read_namespaced_deployment_status(
                 name=deployment_name, namespace=self.k8s_namespace).status.available_replicas \
                     != num_replicas:
                 time.sleep(3)
 
-            self.logger.info('Model deployment complete!')
+            self.logger.info("Model deployment complete!")
 
     def get_num_replicas(self, name, version):
         deployment_name = get_model_deployment_name(
