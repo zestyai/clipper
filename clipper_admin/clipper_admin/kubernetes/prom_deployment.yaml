@@ -34,7 +34,7 @@ spec:
         readinessProbe:
           httpGet:
             port: 9090
-            path: "/admin/ping"
+            path: "/metrics"
           initialDelaySeconds: 5
           timeoutSeconds: 30
         volumeMounts:
