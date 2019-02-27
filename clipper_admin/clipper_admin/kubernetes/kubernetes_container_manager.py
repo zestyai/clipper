@@ -297,7 +297,7 @@ class KubernetesContainerManager(ContainerManager):
         return parsed
 
     def connect(self):
-        nodes = self._k8s_v1.list_node().items()
+        nodes = self._k8s_v1.list_node().items
         if len(nodes) == 0:
             msg = "No nodes found in the kubernetes cluster! Stopping."
             self.logger.error(msg)
