@@ -1,6 +1,6 @@
 # Deployment config for query-frontend
 # null values are set to be filled in later.
-apiVersion: apps/v1
+apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
