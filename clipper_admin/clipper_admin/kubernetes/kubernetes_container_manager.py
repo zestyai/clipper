@@ -298,6 +298,10 @@ class KubernetesContainerManager(ContainerManager):
 
     def connect(self):
         nodes = self._k8s_v1.list_node()
+        if len(nodes) == 0:
+            msg = "No nodes found in the kubernetes cluster! Stopping."
+            self.logger.error(msg)
+            raise ClipperException(msg)
 
         external_node_hosts = []
         for node in nodes.items:
@@ -305,9 +309,10 @@ class KubernetesContainerManager(ContainerManager):
                 if addr.type == "ExternalDNS":
                     external_node_hosts.append(addr.address)
 
-        if len(external_node_hosts) == 0 and (self.useInternalIP):
+        if len(external_node_hosts) == 0 and self.useInternalIP:
             msg = "No external node addresses found. Using Internal IP address"
             self.logger.warning(msg)
+            node = nodes.items()[0]
             for addr in node.status.addresses:
                 if addr.type == "InternalIP":
                     external_node_hosts.append(addr.address)
@@ -378,6 +383,7 @@ class KubernetesContainerManager(ContainerManager):
         for query_frontend_id in range(self.num_frontend_replicas):
             deployment_name = get_model_deployment_name(
                 name, version, query_frontend_id, self.cluster_name)
+            self.logger.info('Starting model deployment for model "{')
 
             config_file = CONFIG_FILES['model']['deployment']
 
@@ -400,14 +406,18 @@ class KubernetesContainerManager(ContainerManager):
                 self._k8s_beta.create_namespaced_deployment(
                     body=generated_body, namespace=self.k8s_namespace)
 
+            self.logger.info('Model deployed. Waiting for healthy status from model container...')
+
             while self._k8s_beta.read_namespaced_deployment_status(
                 name=deployment_name, namespace=self.k8s_namespace).status.available_replicas \
                     != num_replicas:
                 time.sleep(3)
 
+            self.logger.info('Model deployment complete!')
+
     def get_num_replicas(self, name, version):
         deployment_name = get_model_deployment_name(
-            name, version, query_frontend_id=0)
+            name, version, query_frontend_id=0, cluster_name=self.cluster_name)
         response = self._k8s_beta.read_namespaced_deployment_scale(
             name=deployment_name, namespace=self.k8s_namespace)
 
@@ -417,7 +427,10 @@ class KubernetesContainerManager(ContainerManager):
         # NOTE: assumes `metadata.name` can identify the model deployment.
         for query_frontend_id in range(self.num_frontend_replicas):
             deployment_name = get_model_deployment_name(
-                name, version, query_frontend_id)
+                name=name,
+                version=version,
+                query_frontend_id=query_frontend_id,
+                cluster_name=self.cluster_name)
 
             self._k8s_beta.patch_namespaced_deployment_scale(
                 name=deployment_name,
@@ -464,14 +477,12 @@ class KubernetesContainerManager(ContainerManager):
         try:
             for m in models:
                 for v in models[m]:
-                    self._k8s_beta.delete_collection_namespaced_deployment(
-                        namespace=self.k8s_namespace,
-                        label_selector=
-                        "{label}={val}, {cluster_label}={cluster_name}".format(
-                            label=CLIPPER_MODEL_CONTAINER_LABEL,
-                            val=create_model_container_label(m, v),
-                            cluster_label=CLIPPER_DOCKER_LABEL,
-                            cluster_name=self.cluster_name))
+                    label_selector = "{label}={val}, {cluster_label}={cluster_name}".format(
+                        label=CLIPPER_MODEL_CONTAINER_LABEL,
+                        val=create_model_container_label(m, v),
+                        cluster_label=CLIPPER_DOCKER_LABEL,
+                        cluster_name=self.cluster_name)
+                    self.delete_with_selector(label_selector)
         except ApiException as e:
             self.logger.warning(
                 "Exception deleting kubernetes deployments: {}".format(e))
@@ -479,13 +490,11 @@ class KubernetesContainerManager(ContainerManager):
 
     def stop_all_model_containers(self):
         try:
-            self._k8s_beta.delete_collection_namespaced_deployment(
-                namespace=self.k8s_namespace,
-                label_selector="{label}, {cluster_label}={cluster_name}".
-                format(
-                    label=CLIPPER_MODEL_CONTAINER_LABEL,
-                    cluster_label=CLIPPER_DOCKER_LABEL,
-                    cluster_name=self.cluster_name))
+            label_selector = "{label}, {cluster_label}={cluster_name}".format(
+                label=CLIPPER_MODEL_CONTAINER_LABEL,
+                cluster_label=CLIPPER_DOCKER_LABEL,
+                cluster_name=self.cluster_name)
+            self.delete_with_selector(label_selector)
         except ApiException as e:
             self.logger.warning(
                 "Exception deleting kubernetes deployments: {}".format(e))
@@ -494,39 +503,38 @@ class KubernetesContainerManager(ContainerManager):
     def stop_all(self, graceful=True):
         self.logger.info("Stopping all running Clipper resources")
 
-        cluster_selecter = "{cluster_label}={cluster_name}".format(
+        cluster_selector = "{cluster_label}={cluster_name}".format(
             cluster_label=CLIPPER_DOCKER_LABEL, cluster_name=self.cluster_name)
 
         try:
             for service in self._k8s_v1.list_namespaced_service(
                     namespace=self.k8s_namespace,
-                    label_selector=cluster_selecter).items:
+                    label_selector=cluster_selector).items:
                 service_name = service.metadata.name
                 self._k8s_v1.delete_namespaced_service(
                     namespace=self.k8s_namespace,
                     name=service_name,
                     body=V1DeleteOptions())
 
-            self._k8s_beta.delete_collection_namespaced_deployment(
-                namespace=self.k8s_namespace, label_selector=cluster_selecter)
-
-            self._k8s_beta.delete_collection_namespaced_replica_set(
-                namespace=self.k8s_namespace, label_selector=cluster_selecter)
-
-            self._k8s_v1.delete_collection_namespaced_replication_controller(
-                namespace=self.k8s_namespace, label_selector=cluster_selecter)
-
-            self._k8s_v1.delete_collection_namespaced_pod(
-                namespace=self.k8s_namespace, label_selector=cluster_selecter)
-
-            self._k8s_v1.delete_collection_namespaced_config_map(
-                namespace=self.k8s_namespace, label_selector=cluster_selecter)
+            self.delete_with_selector(cluster_selector)
         except ApiException as e:
             logging.warning(
                 "Exception deleting kubernetes resources: {}".format(e))
 
-    def get_registry(self):
-        return self.registry
+    def delete_with_selector(self, label_selector):
+        self._k8s_beta.delete_collection_namespaced_deployment(
+            namespace=self.k8s_namespace,
+            label_selector=label_selector)
+        self._k8s_beta.delete_collection_namespaced_replica_set(
+            namespace=self.k8s_namespace,
+            label_selector=label_selector)
+        self._k8s_v1.delete_collection_namespaced_replication_controller(
+            namespace=self.k8s_namespace, label_selector=label_selector)
+        self._k8s_v1.delete_collection_namespaced_pod(
+            namespace=self.k8s_namespace,
+            label_selector=label_selector)
+        self._k8s_v1.delete_collection_namespaced_config_map(
+            namespace=self.k8s_namespace, label_selector=label_selector)
 
     def get_admin_addr(self):
         if self.use_k8s_proxy:
