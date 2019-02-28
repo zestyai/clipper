@@ -268,7 +268,7 @@ class DockerContainerManager(ContainerManager):
         self.prometheus_port = all_labels[CLIPPER_DOCKER_PORT_LABELS['metric']]
         self.prom_config_path = all_labels[CLIPPER_METRIC_CONFIG_LABEL]
 
-    def deploy_model(self, name, version, input_type, image, num_replicas=1, gpu=False):
+    def deploy_model(self, name, version, input_type, image, num_replicas=1, gpu=False, res_mem=None, res_cpu=None):
         # Parameters
         # ----------
         # image : str

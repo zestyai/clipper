@@ -493,7 +493,9 @@ class ClipperConnection(object):
                      labels=None,
                      num_replicas=1,
                      batch_size=-1,
-                     gpu=False):
+                     gpu=False,
+                     res_mem=None,
+                     res_cpu=None):
         """Deploys the model in the provided Docker image to Clipper.
 
         Deploying a model to Clipper does a few things.
@@ -570,7 +572,9 @@ class ClipperConnection(object):
             input_type=input_type,
             image=image,
             num_replicas=num_replicas,
-            gpu=gpu)
+            gpu=gpu,
+            res_cpu=res_cpu,
+            res_mem=res_mem)
         self.register_model(
             name,
             version,
