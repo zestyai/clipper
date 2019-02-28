@@ -379,7 +379,7 @@ class KubernetesContainerManager(ContainerManager):
                 "Could not connect to Clipper Kubernetes cluster. "
                 "Reason: {}".format(e))
 
-    def deploy_model(self, name, version, input_type, image, num_replicas=1, gpu=False):
+    def deploy_model(self, name, version, input_type, image, num_replicas=1, gpu=False, res_mem=None, res_cpu=None):
         for query_frontend_id in range(self.num_frontend_replicas):
             deployment_name = get_model_deployment_name(
                 name, version, query_frontend_id, self.cluster_name)
@@ -402,6 +402,17 @@ class KubernetesContainerManager(ContainerManager):
                 input_type=input_type,
                 image=image,
                 cluster_name=self.cluster_name)
+
+            if res_mem is not None or res_cpu is not None:
+                self.logger.info("Setting model container resource requests. cpu: {cpu}. mem: {mem}".format(cpu=res_cpu, mem=res_mem))
+
+                resources = generated_body["spec"]["template"]["spec"]["containers"][0].get("resources", {})
+                reqs = resources.get("requests", {})
+                if res_mem is not None:
+                    reqs["memory"] = res_mem
+                if res_cpu is not None:
+                    reqs["cpu"] = res_cpu
+                generated_body["spec"]["template"]["spec"]["containers"][0]["resources"] = resources
 
             with _pass_conflicts():
                 self._k8s_beta.create_namespaced_deployment(
