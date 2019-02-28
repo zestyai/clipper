@@ -412,6 +412,7 @@ class KubernetesContainerManager(ContainerManager):
                     reqs["memory"] = res_mem
                 if res_cpu is not None:
                     reqs["cpu"] = res_cpu
+                resources["requests"] = reqs
                 generated_body["spec"]["template"]["spec"]["containers"][0]["resources"] = resources
 
             with _pass_conflicts():
