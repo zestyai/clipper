@@ -1,6 +1,6 @@
 # Deployment config for query-frontend
 # null values are set to be filled in later.
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -9,6 +9,12 @@ metadata:
   name: {{ name }}-at-{{ cluster_name }}
 spec:
   replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      ai.clipper.container.label: {{ cluster_name }}
+      ai.clipper.name: query-frontend
+      ai.clipper.query_frontend.id: "{{ id_label }}"
   template:
     metadata:
       annotations:

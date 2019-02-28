@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 from ..container_manager import (
     create_model_container_label, ContainerManager, CLIPPER_DOCKER_LABEL,
-    CLIPPER_MODEL_CONTAINER_LABEL, CLIPPER_QUERY_FRONTEND_ID_LABEL,
+    CLIPPER_MODEL_CONTAINER_LABEL,
     CLIPPER_INTERNAL_MANAGEMENT_PORT, CLIPPER_INTERNAL_QUERY_PORT,
     CLIPPER_INTERNAL_METRIC_PORT, CLIPPER_NAME_LABEL, ClusterAdapter)
 from ..exceptions import ClipperException
@@ -48,8 +48,6 @@ CONFIG_FILES = {
 }
 
 
-
-
 @contextmanager
 def _pass_conflicts():
     try:
@@ -91,7 +89,7 @@ class KubernetesContainerManager(ContainerManager):
             The proxy address if you are proxying connections locally using ``kubectl proxy``.
             If this argument is provided, Clipper will construct the appropriate proxy
             URLs for accessing Clipper's Kubernetes services, rather than using the API server
-            addres provided in your kube config.
+            address provided in your kube config.
         redis_ip : str, optional
             The address of a running Redis cluster. If set to None, Clipper will start
             a Redis deployment for you.
@@ -134,7 +132,7 @@ class KubernetesContainerManager(ContainerManager):
         config.load_kube_config(context=kubernetes_context)
         configuration.assert_hostname = False
         self._k8s_v1 = client.CoreV1Api()
-        self._k8s_beta = client.ExtensionsV1beta1Api()
+        self._k8s_apps = client.AppsV1Api()
 
         # Create the template engine
         # Config: Any variable missing -> Error
@@ -162,7 +160,7 @@ class KubernetesContainerManager(ContainerManager):
                     "Reason: {}".format(e.reason))
             self.k8s_namespace = namespace
         else:
-            msg = "Error connecting to Kubernetes cluster. Namespace does not exist. You can pass in KubernetesContainerManager(create_namespace_if_not_exists=True) to crate this namespcae"
+            msg = "Error connecting to Kubernetes cluster. Namespace does not exist. You can pass in KubernetesContainerManager(create_namespace_if_not_exists=True) to crate this namespace"
             logger.error(msg)
             raise ClipperException(msg)
 
@@ -196,7 +194,7 @@ class KubernetesContainerManager(ContainerManager):
         # If an existing Redis service isn't provided, start one
         if self.redis_ip is None:
             with _pass_conflicts():
-                self._k8s_beta.create_namespaced_deployment(
+                self._k8s_apps.create_namespaced_deployment(
                     body=self._generate_config(
                         CONFIG_FILES['redis']['deployment'],
                         cluster_name=self.cluster_name),
@@ -222,7 +220,7 @@ class KubernetesContainerManager(ContainerManager):
                 redis_service_host=self.redis_ip,
                 redis_service_port=self.redis_port,
                 cluster_name=self.cluster_name)
-            self._k8s_beta.create_namespaced_deployment(
+            self._k8s_apps.create_namespaced_deployment(
                 body=mgmt_deployment_data, namespace=self.k8s_namespace)
 
         with _pass_conflicts():
@@ -246,7 +244,7 @@ class KubernetesContainerManager(ContainerManager):
                     name='query-frontend-{}'.format(query_frontend_id),
                     id_label=str(query_frontend_id),
                     cluster_name=self.cluster_name)
-                self._k8s_beta.create_namespaced_deployment(
+                self._k8s_apps.create_namespaced_deployment(
                     body=query_deployment_data, namespace=self.k8s_namespace)
 
             with _pass_conflicts():
@@ -279,7 +277,7 @@ class KubernetesContainerManager(ContainerManager):
                 version=PROM_VERSION,
                 cluster_name=self.cluster_name,
             )
-            self._k8s_beta.create_namespaced_deployment(
+            self._k8s_apps.create_namespaced_deployment(
                 body=deployment_data, namespace=self.k8s_namespace)
 
         with _pass_conflicts():
@@ -350,10 +348,9 @@ class KubernetesContainerManager(ContainerManager):
                 elif p.name == "7000":
                     self.clipper_rpc_port = p.node_port
 
-            query_frontend_deployments = self._k8s_beta.list_namespaced_deployment(
+            query_frontend_deployments = self._k8s_apps.list_namespaced_deployment(
                 namespace=self.k8s_namespace,
-                label_selector=
-                "{name_label}=query-frontend, {cluster_label}={cluster_name}".
+                label_selector="{name_label}=query-frontend, {cluster_label}={cluster_name}".
                 format(
                     name_label=CLIPPER_NAME_LABEL,
                     cluster_label=CLIPPER_DOCKER_LABEL,
@@ -416,12 +413,12 @@ class KubernetesContainerManager(ContainerManager):
                 generated_body["spec"]["template"]["spec"]["containers"][0]["resources"] = resources
 
             with _pass_conflicts():
-                self._k8s_beta.create_namespaced_deployment(
+                self._k8s_apps.create_namespaced_deployment(
                     body=generated_body, namespace=self.k8s_namespace)
 
             self.logger.info("Model deployed. Waiting for healthy status from model container...")
 
-            while self._k8s_beta.read_namespaced_deployment_status(
+            while self._k8s_apps.read_namespaced_deployment_status(
                 name=deployment_name, namespace=self.k8s_namespace).status.available_replicas \
                     != num_replicas:
                 time.sleep(3)
@@ -431,7 +428,7 @@ class KubernetesContainerManager(ContainerManager):
     def get_num_replicas(self, name, version):
         deployment_name = get_model_deployment_name(
             name, version, query_frontend_id=0, cluster_name=self.cluster_name)
-        response = self._k8s_beta.read_namespaced_deployment_scale(
+        response = self._k8s_apps.read_namespaced_deployment_scale(
             name=deployment_name, namespace=self.k8s_namespace)
 
         return response.spec.replicas
@@ -445,7 +442,7 @@ class KubernetesContainerManager(ContainerManager):
                 query_frontend_id=query_frontend_id,
                 cluster_name=self.cluster_name)
 
-            self._k8s_beta.patch_namespaced_deployment_scale(
+            self._k8s_apps.patch_namespaced_deployment_scale(
                 name=deployment_name,
                 namespace=self.k8s_namespace,
                 body={
@@ -454,7 +451,7 @@ class KubernetesContainerManager(ContainerManager):
                     }
                 })
 
-            while self._k8s_beta.read_namespaced_deployment_status(
+            while self._k8s_apps.read_namespaced_deployment_status(
                 name=deployment_name, namespace=self.k8s_namespace).status.available_replicas \
                     != num_replicas:
                 time.sleep(3)
@@ -535,10 +532,10 @@ class KubernetesContainerManager(ContainerManager):
                 "Exception deleting kubernetes resources: {}".format(e))
 
     def delete_with_selector(self, label_selector):
-        self._k8s_beta.delete_collection_namespaced_deployment(
+        self._k8s_apps.delete_collection_namespaced_deployment(
             namespace=self.k8s_namespace,
             label_selector=label_selector)
-        self._k8s_beta.delete_collection_namespaced_replica_set(
+        self._k8s_apps.delete_collection_namespaced_replica_set(
             namespace=self.k8s_namespace,
             label_selector=label_selector)
         self._k8s_v1.delete_collection_namespaced_replication_controller(

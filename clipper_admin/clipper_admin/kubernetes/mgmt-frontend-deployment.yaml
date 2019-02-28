@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -7,6 +7,11 @@ metadata:
   name: mgmt-frontend-at-{{ cluster_name }}
 spec:
   replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      ai.clipper.container.label: {{ cluster_name }}
+      ai.clipper.name: mgmt-frontend
   template:
     metadata:
       labels:
