@@ -9,7 +9,7 @@ metadata:
   name: {{ name }}-at-{{ cluster_name }}
 spec:
   replicas: 1
-  revisionHistoryLimit: 1
+  revisionHistoryLimit: 0
   selector:
     matchLabels:
       ai.clipper.container.label: {{ cluster_name }}

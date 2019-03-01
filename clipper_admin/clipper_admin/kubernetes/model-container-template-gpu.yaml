@@ -9,7 +9,7 @@ metadata:
   name: {{ deployment_name }} # Cluster name included
 spec:
   replicas: {{ num_replicas }}
-  revisionHistoryLimit: 1
+  revisionHistoryLimit: 0
   selector:
     matchLabels:
       ai.clipper.container.label: {{ cluster_name }}
