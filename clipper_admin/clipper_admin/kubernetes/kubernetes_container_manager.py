@@ -589,7 +589,7 @@ class KubernetesContainerManager(ContainerManager):
 
 
 def get_model_deployment_name(name, version, query_frontend_id, cluster_name):
-    return "{name}-{version}-at-{query_frontend_id}-at-{cluster_name}".format(
+    return "{name}-{version}-deployment-at-{query_frontend_id}-at-{cluster_name}".format(
         name=name,
         version=version,
         query_frontend_id=query_frontend_id,
