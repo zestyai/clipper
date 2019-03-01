@@ -129,6 +129,7 @@ class KubernetesContainerManager(ContainerManager):
         self.redis_ip = redis_ip
         self.redis_port = redis_port
         self.useInternalIP = useInternalIP
+        self.kube_context = kubernetes_context
         config.load_kube_config(context=kubernetes_context)
         configuration.assert_hostname = False
         self._k8s_v1 = client.CoreV1Api()
