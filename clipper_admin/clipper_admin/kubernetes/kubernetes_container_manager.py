@@ -419,10 +419,12 @@ class KubernetesContainerManager(ContainerManager):
 
             self.logger.info("Model deployed. Waiting for healthy status from model container...")
 
-            while self._k8s_apps.read_namespaced_deployment_status(
-                name=deployment_name, namespace=self.k8s_namespace).status.available_replicas \
-                    < num_replicas:
+            deployment_status = self._k8s_apps.read_namespaced_deployment_status(
+                name=deployment_name, namespace=self.k8s_namespace).status.available_replicas
+            while deployment_status is  None or int(deployment_status) < num_replicas:
                 time.sleep(3)
+                deployment_status = self._k8s_apps.read_namespaced_deployment_status(
+                    name=deployment_name, namespace=self.k8s_namespace).status.available_replicas
 
             self.logger.info("Model deployment complete!")
 
