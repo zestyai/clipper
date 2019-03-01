@@ -421,7 +421,7 @@ class KubernetesContainerManager(ContainerManager):
 
             while self._k8s_apps.read_namespaced_deployment_status(
                 name=deployment_name, namespace=self.k8s_namespace).status.available_replicas \
-                    != num_replicas:
+                    < num_replicas:
                 time.sleep(3)
 
             self.logger.info("Model deployment complete!")
