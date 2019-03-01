@@ -158,8 +158,8 @@ class RequestHandler {
                                clipper::metrics::MetricsRegistry::get_metrics();
                            std::string metrics_report =
                                registry.report_metrics();
-                           clipper::log_info(LOGGING_TAG_QUERY_FRONTEND,
-                                             "METRICS", metrics_report);
+                           //clipper::log_info(LOGGING_TAG_QUERY_FRONTEND,
+                           //                  "METRICS", metrics_report);
                            respond_http(metrics_report, "200 OK", response);
                          });
 

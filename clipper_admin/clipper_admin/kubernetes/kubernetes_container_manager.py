@@ -421,7 +421,7 @@ class KubernetesContainerManager(ContainerManager):
 
             deployment_status = self._k8s_apps.read_namespaced_deployment_status(
                 name=deployment_name, namespace=self.k8s_namespace).status.available_replicas
-            while deployment_status is  None or int(deployment_status) < num_replicas:
+            while deployment_status is None or int(deployment_status) < num_replicas:
                 time.sleep(3)
                 deployment_status = self._k8s_apps.read_namespaced_deployment_status(
                     name=deployment_name, namespace=self.k8s_namespace).status.available_replicas
@@ -591,7 +591,7 @@ class KubernetesContainerManager(ContainerManager):
 
 
 def get_model_deployment_name(name, version, query_frontend_id, cluster_name):
-    return "{name}-{version}-deployment-at-{query_frontend_id}-at-{cluster_name}".format(
+    return "{name}-{version}-at-{query_frontend_id}-at-{cluster_name}".format(
         name=name,
         version=version,
         query_frontend_id=query_frontend_id,
