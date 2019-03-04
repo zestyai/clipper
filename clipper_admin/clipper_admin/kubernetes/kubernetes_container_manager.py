@@ -406,11 +406,15 @@ class KubernetesContainerManager(ContainerManager):
 
                 resources = generated_body["spec"]["template"]["spec"]["containers"][0].get("resources", {})
                 reqs = resources.get("requests", {})
+                limits = resources.get("limits", {})
                 if res_mem is not None:
                     reqs["memory"] = res_mem
+                    limits["memory"] = res_mem
                 if res_cpu is not None:
                     reqs["cpu"] = res_cpu
+                    limits["cpu"] = res_cpu
                 resources["requests"] = reqs
+                resources["limits"] = limits
                 generated_body["spec"]["template"]["spec"]["containers"][0]["resources"] = resources
 
             with _pass_conflicts():
