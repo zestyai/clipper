@@ -433,15 +433,20 @@ void RPCService::document_receive_time(
     std::unordered_map<std::vector<uint8_t>, ConnectedContainerInfo,
                        std::function<size_t(const std::vector<uint8_t> &vec)>>
         &connections_containers_map,
-    const vector<uint8_t> connection_id) {
+  const vector<uint8_t> connection_id) {
   auto container_info_entry = connections_containers_map.find(connection_id);
   if (container_info_entry == connections_containers_map.end()) {
-    throw std::runtime_error(
-        "Documenting receive time for an unregistered container");
+  	log_error_formatted(
+              LOGGING_TAG_RPC,
+              "Documenting receive time for an unregistered container");
+//    throw std::runtime_error(
+//        "Documenting receive time for an unregistered container");
   }
-  std::chrono::time_point<std::chrono::system_clock> &last_contacted_time =
-      std::get<2>(container_info_entry->second);
-  last_contacted_time = std::chrono::system_clock::now();
+  else {
+	  std::chrono::time_point<std::chrono::system_clock> &last_contacted_time =
+		  std::get<2>(container_info_entry->second);
+	  last_contacted_time = std::chrono::system_clock::now();
+  }
 }
 
 void RPCService::send_heartbeat_response(socket_t &socket,

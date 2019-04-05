@@ -37,6 +37,7 @@ using HttpServer = SimpleWeb::Server<SimpleWeb::HTTP>;
 
 namespace query_frontend {
 
+const std::string VERSION = "1.1-andy";
 const std::string LOGGING_TAG_QUERY_FRONTEND = "QUERYFRONTEND";
 const std::string GET_METRICS = "^/metrics$";
 
@@ -136,6 +137,11 @@ class RequestHandler {
   RequestHandler(std::string address, int portno)
       : server_(address, portno), query_processor_() {
     clipper::Config& conf = clipper::get_config();
+
+  	clipper::log_info_formatted(
+	  	LOGGING_TAG_QUERY_FRONTEND,
+	  	"Starting query_frontend version: {}", VERSION);
+
     while (!redis_connection_.connect(conf.get_redis_address(),
                                       conf.get_redis_port())) {
       clipper::log_error(LOGGING_TAG_QUERY_FRONTEND,
