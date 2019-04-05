@@ -414,6 +414,7 @@ class KubernetesContainerManager(ContainerManager):
             if gpu:
                 self.logger.info("Setting gpu request")
                 reqs["nvidia.com/gpu"] = "1"
+                limits["nvidia.com/gpu"] = "1"
 
             resources["requests"] = reqs
             resources["limits"] = limits
