@@ -43,7 +43,6 @@ CONFIG_FILES = {
     },
     'model': {
         'deployment': 'model-container-template.yaml',
-        'deployment-gpu': 'model-container-template-gpu.yaml'
     }
 }
 
@@ -386,9 +385,6 @@ class KubernetesContainerManager(ContainerManager):
 
             config_file = CONFIG_FILES['model']['deployment']
 
-            if gpu:
-                config_file = CONFIG_FILES['model']['deployment-gpu']
-
             generated_body = self._generate_config(
                 config_file,
                 deployment_name=deployment_name,
@@ -401,21 +397,27 @@ class KubernetesContainerManager(ContainerManager):
                 image=image,
                 cluster_name=self.cluster_name)
 
+            resources = generated_body["spec"]["template"]["spec"]["containers"][0].get("resources", {})
+            reqs = resources.get("requests", {})
+            limits = resources.get("limits", {})
+
             if res_mem is not None or res_cpu is not None:
                 self.logger.info("Setting model container resource requests. cpu: {cpu}. mem: {mem}".format(cpu=res_cpu, mem=res_mem))
 
-                resources = generated_body["spec"]["template"]["spec"]["containers"][0].get("resources", {})
-                reqs = resources.get("requests", {})
-                limits = resources.get("limits", {})
                 if res_mem is not None:
                     reqs["memory"] = res_mem
                     limits["memory"] = res_mem
                 if res_cpu is not None:
                     reqs["cpu"] = res_cpu
                     limits["cpu"] = res_cpu
-                resources["requests"] = reqs
-                resources["limits"] = limits
-                generated_body["spec"]["template"]["spec"]["containers"][0]["resources"] = resources
+
+            if gpu:
+                self.logger.info("Setting gpu request")
+                reqs["nvidia.com/gpu"] = "1"
+
+            resources["requests"] = reqs
+            resources["limits"] = limits
+            generated_body["spec"]["template"]["spec"]["containers"][0]["resources"] = resources
 
             with _pass_conflicts():
                 self._k8s_apps.create_namespaced_deployment(
