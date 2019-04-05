@@ -409,9 +409,9 @@ void RPCService::receive_message(
         auto container_info_entry =
             connections_containers_map.find(connection_id);
         if (container_info_entry == connections_containers_map.end()) {
-          throw std::runtime_error(
-              "Failed to find container that was previously registered via "
-              "RPC");
+            	log_error_formatted(LOGGING_TAG_RPC,
+              "Failed to find container that was previously registered via RPC");
+              break;
         }
         ConnectedContainerInfo &container_info = container_info_entry->second;
 
