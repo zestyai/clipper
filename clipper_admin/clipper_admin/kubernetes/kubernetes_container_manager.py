@@ -379,7 +379,7 @@ class KubernetesContainerManager(ContainerManager):
     def deploy_model(self, name, version, input_type, image, num_replicas=1, gpu=False, res_mem=None, res_cpu=None):
         for query_frontend_id in range(self.num_frontend_replicas):
             deployment_name = get_model_deployment_name(
-                name, version, query_frontend_id, self.cluster_name)
+                name, version, query_frontend_id, self.cluster_name, gpu)
             self.logger.info("Starting model deployment: {deployment_name}".format(
                 deployment_name=deployment_name))
 
@@ -597,9 +597,11 @@ class KubernetesContainerManager(ContainerManager):
                 port=self.clipper_metric_port)
 
 
-def get_model_deployment_name(name, version, query_frontend_id, cluster_name):
-    return "{name}-{version}-at-{query_frontend_id}-at-{cluster_name}".format(
+def get_model_deployment_name(name, version, query_frontend_id, cluster_name, gpu=False):
+    gpu_tag = '-gpu' if gpu else ''
+    return "{name}-{version}-at-{query_frontend_id}-at-{cluster_name}{gpu_tag}".format(
         name=name,
         version=version,
         query_frontend_id=query_frontend_id,
-        cluster_name=cluster_name)
+        cluster_name=cluster_name,
+        gpu_tag=gpu_tag)
