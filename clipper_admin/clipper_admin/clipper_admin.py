@@ -427,9 +427,7 @@ class ClipperConnection(object):
 
         run_cmd = ''
         if pkgs_to_install:
-            run_as_lst = 'RUN apt-get -y install build-essential && pip install'.split(
-                ' ')
-            run_cmd = ' '.join(run_as_lst + pkgs_to_install)
+            run_cmd = 'RUN pip install ' + pkgs_to_install.join(' ')
         with tempfile.NamedTemporaryFile(
                 mode="w+b", suffix="tar") as context_file:
             # Create build context tarfile
