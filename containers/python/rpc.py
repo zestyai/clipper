@@ -38,7 +38,7 @@ HEARTBEAT_TYPE_KEEPALIVE = 0
 HEARTBEAT_TYPE_REQUEST_CONTAINER_METADATA = 1
 
 SOCKET_POLLING_TIMEOUT_MILLIS = 5000
-SOCKET_ACTIVITY_TIMEOUT_MILLIS = 30000
+SOCKET_ACTIVITY_TIMEOUT_MILLIS = 60000
 
 EVENT_HISTORY_BUFFER_SIZE = 30
 
@@ -139,6 +139,7 @@ class Server(threading.Thread):
         self.clipper_ip = clipper_ip
         self.clipper_port = clipper_port
         self.event_history = EventHistory(EVENT_HISTORY_BUFFER_SIZE)
+        self.socket_timeout = os.environ.get('SOCKET_ACTIVITY_TIMEOUT_MILLIS', SOCKET_ACTIVITY_TIMEOUT_MILLIS)
 
     def validate_rpc_version(self, received_version):
         if received_version != RPC_VERSION:
@@ -236,7 +237,7 @@ class Server(threading.Thread):
                         time_delta = curr_time - last_activity_time_millis
                         time_delta_millis = (time_delta.seconds * 1000) + (
                             time_delta.microseconds / 1000)
-                        if time_delta_millis >= SOCKET_ACTIVITY_TIMEOUT_MILLIS:
+                        if time_delta_millis >= self.socket_timeout:
                             # Terminate the session
                             print("Connection timed out, reconnecting...")
                             connected = False
