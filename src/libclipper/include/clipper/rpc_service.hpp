@@ -159,7 +159,7 @@ class RPCService {
   std::function<void(VersionedModelId, int)> inactive_container_callback_;
 
   static constexpr int INITIAL_REPLICA_ID_SIZE = 100;
-  static constexpr long CONTAINER_ACTIVITY_TIMEOUT_MILLS = 30000;
+  static constexpr long CONTAINER_ACTIVITY_TIMEOUT_MILLS = 90000;
   static constexpr long CONTAINER_EXISTENCE_CHECK_FREQUENCY_MILLS = 10000;
 };
 
