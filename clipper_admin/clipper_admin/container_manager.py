@@ -81,7 +81,9 @@ class ContainerManager(object):
         return
 
     @abc.abstractmethod
-    def deploy_model(self, name, version, input_type, image, num_replicas=1, gpu=False, res_mem=None, res_cpu=None):
+    def deploy_model(self, name, version, input_type, image, num_replicas=1, gpu=False,
+                     res_req_cpu=None, res_req_mem=None,
+                     res_limit_cpu=None, res_limit_mem=None):
         return
 
     @abc.abstractmethod

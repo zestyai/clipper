@@ -376,7 +376,9 @@ class KubernetesContainerManager(ContainerManager):
                 "Could not connect to Clipper Kubernetes cluster. "
                 "Reason: {}".format(e))
 
-    def deploy_model(self, name, version, input_type, image, num_replicas=1, gpu=False, res_mem=None, res_cpu=None):
+    def deploy_model(self, name, version, input_type, image, num_replicas=1,
+                     gpu=False, res_req_cpu=None, res_req_mem=None,
+                     res_limit_cpu=None, res_limit_mem=None):
         for query_frontend_id in range(self.num_frontend_replicas):
             deployment_name = get_model_deployment_name(
                 name, version, query_frontend_id, self.cluster_name, gpu)
@@ -401,15 +403,16 @@ class KubernetesContainerManager(ContainerManager):
             reqs = resources.get("requests", {})
             limits = resources.get("limits", {})
 
-            if res_mem is not None or res_cpu is not None:
-                self.logger.info("Setting model container resource requests. cpu: {cpu}. mem: {mem}".format(cpu=res_cpu, mem=res_mem))
-
-                if res_mem is not None:
-                    reqs["memory"] = res_mem
-                    limits["memory"] = res_mem
-                if res_cpu is not None:
-                    reqs["cpu"] = res_cpu
-                    limits["cpu"] = res_cpu
+            if res_req_cpu or res_limit_cpu or res_req_mem or res_limit_mem:
+                self.logger.info("Setting model container resource requests. "
+                                 + "requests: cpu {req_cpu}. mem {req_mem} "
+                                 + " | limits: cpu {limit_cpu}. mem {limit_mem}"
+                                 .format(req_cpu=res_req_cpu, req_mem=res_req_mem,
+                                         limit_cpu=res_limit_cpu, limit_mem=res_limit_mem))
+                reqs["cpu"] = res_req_cpu
+                limits["cpu"] = res_limit_cpu
+                reqs["memory"] = res_req_mem
+                limits["memory"] = res_limit_mem
 
             if gpu:
                 self.logger.info("Setting gpu request")
