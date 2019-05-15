@@ -404,9 +404,9 @@ class KubernetesContainerManager(ContainerManager):
             limits = resources.get("limits", {})
 
             if res_req_cpu or res_limit_cpu or res_req_mem or res_limit_mem:
-                self.logger.info("Setting model container resource requests. "
+                self.logger.info(("Setting model container resource requests. "
                                  + "requests: cpu {req_cpu}. mem {req_mem} "
-                                 + " | limits: cpu {limit_cpu}. mem {limit_mem}"
+                                 + " | limits: cpu {limit_cpu}. mem {limit_mem}")
                                  .format(req_cpu=res_req_cpu, req_mem=res_req_mem,
                                          limit_cpu=res_limit_cpu, limit_mem=res_limit_mem))
                 reqs["cpu"] = res_req_cpu
